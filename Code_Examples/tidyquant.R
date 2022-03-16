@@ -14,7 +14,7 @@ df <- df %>%
                                   daily_gain >0 ~ "Gain")) %>% 
   mutate(volatility=abs(daily_gain))
 
-p1 <- df %>% 
+p1 <- df %>%  
   ggplot(aes(x=date,y=adjusted)) +
   geom_point() +
   labs(title = "Adjusted price")
