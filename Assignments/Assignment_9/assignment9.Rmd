@@ -1,0 +1,66 @@
+---
+title: "Assignment_9"
+author: "anders sorenson"
+date: "3/27/2022"
+output: html_document
+---
+```{r setup, include=FALSE}
+library(tidyverse)
+library(modelr)
+library(ggplot2)
+library(performance)
+df <- read_csv("C:/Users/ander/Desktop/Data_Course_ANDERSSORENSON/Data/GradSchool_Admissions.csv")
+```
+Glimpse of the Data
+
+```{r}
+glimpse(df)
+
+
+```
+Visulaization shows a positive relationship between GRE and beign admitted same with GPA as would be expected.
+```{r}
+mod1 <- lm(admit ~ gre, data = df)
+df = add_predictions(df,mod1,var = "mod1_Prediction")
+df %>% 
+  ggplot(aes(x = gre, y = mod1_Prediction)) + 
+  geom_point()
+
+mod2 <- lm(admit ~ gpa, data = df)
+df = add_predictions(df,mod2,var = "mod2_Prediction")
+df %>% 
+  ggplot(aes(x = gpa, y = mod2_Prediction)) + 
+  geom_point()
+
+mod3 <- lm(admit ~ rank, data = df)
+df = add_predictions(df,mod3,var = "mod3_Prediction")
+df %>% 
+  ggplot(aes(x = rank, y = mod3_Prediction)) + 
+  geom_col()
+
+
+```
+Rank 2 schools seem to have the most number of students admitted to grad school
+
+Now we look at models that contain multiple variables
+```{r}
+mod4 <- lm(admit ~ gre + gpa, data = df)
+df = add_predictions(df,mod4,var = "mod4_Prediction")
+
+mod5 <- lm(admit ~ gpa + rank, data = df)
+df = add_predictions(df,mod5,var = "mod5_Prediction")
+
+mod6 <- lm(admit ~ gre + rank, data = df)
+df = add_predictions(df,mod6,var = "mod6_Prediction")
+
+mod7 <- lm(admit ~ gre + rank + gpa, data = df)
+df = add_predictions(df,mod7,var = "mod7_Prediction")
+
+```
+compare the models performance to one another using the performance package
+```{r}
+comps <- compare_performance(mod4,mod5,mod6,mod7,
+                        rank = TRUE)
+comps
+```
+This indicates that model 7, the model that includes rank, gpa , and gre is the most accurate predictor
