@@ -1,0 +1,73 @@
+---
+title: "SORENSON_Skills_Test_3.Rmd"
+author: "anders sorenson"
+date: "4/10/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Load in packages and read in the data
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(broom)
+df <- read_csv("FacultySalaries_1995.csv")
+```
+Clean the data so it is ready for plotting, first create subsets for each rank of professor, then create new column called rank, then change names so that the subsets can be rejoined again
+```{r, message=FALSE, warning=FALSE}
+Full <- df %>%
+  select(c("FedID","UnivName","State","Tier","NumInstructors","NumFacultyAll","AvgProfSalaryAll","AvgProfCompAll"),contains("FullProf"))
+
+Assoc <- df %>%
+  select(c("FedID","UnivName","State","Tier","NumInstructors","NumFacultyAll","AvgProfSalaryAll","AvgProfCompAll"),contains("AssocProf"))
+Assist <- df %>%
+  select(c("FedID","UnivName","State","Tier","NumInstructors","NumFacultyAll","AvgProfSalaryAll","AvgProfCompAll"),contains("AssistProf"))
+
+Full$rank <- "FullProf"
+Assoc$rank <- "AssocProf"
+Assist$rank <- "AssistProf"
+
+names(Full) <- str_replace(names(Full),"Full","")
+names(Assoc) <- str_replace(names(Assoc),"Assoc","")
+names(Assist) <- str_replace(names(Assist),"Assist","")
+
+dfclean <- rbind(Full,Assist,Assoc)
+dfclean <- subset(dfclean, Tier != "VIIB")
+ 
+```
+Plotting
+```{r, message=FALSE, warning=FALSE}
+
+dfclean %>% 
+  ggplot(aes(x=rank, y=AvgProfSalary, color=rank)) +
+  geom_boxplot() + 
+  facet_grid(~Tier) + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+Modeling
+```{r, message=FALSE, warning=FALSE}
+model1 <- aov(AvgProfSalary ~ Tier + State + rank, data = dfclean)
+summary(model1)
+
+juno <- read_csv("Juniper_Oils.csv")
+```
+
+```{r, message=FALSE, warning=FALSE}
+juno <- juno %>%  pivot_longer(cols = c("alpha-pinene","para-cymene","alpha-terpineol","cedr-9-ene","alpha-cedrene","beta-cedrene","cis-thujopsene","alpha-himachalene","beta-chamigrene","cuparene","compound 1","alpha-chamigrene","widdrol","cedrol","beta-acorenol","alpha-acorenol","gamma-eudesmol","beta-eudesmol","alpha-eudesmol","cedr-8-en-13-ol","cedr-8-en-15-ol","compound 2","thujopsenal"), names_to = "ChemicalID", values_to = "Concentration")
+
+
+juno %>% 
+  ggplot(aes(x=YearsSinceBurn, y=Concentration)) + 
+  geom_smooth() +
+  facet_wrap(~ChemicalID, scales = "free_y")
+
+```
+Modeling the Juniper Oil Data
+```{r, message=FALSE, warning=FALSE}
+model2 <- glm(formula = Concentration ~ YearsSinceBurn, data = juno)
+coef(summary(model2))[,4]
+
+tidy()
+```
